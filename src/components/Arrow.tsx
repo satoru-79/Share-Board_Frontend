@@ -22,6 +22,7 @@ const Arrow:React.FC<Props> = (props) => {
 
 
     useEffect(() => {
+      //LeaderLineクラスのオブジェクトを使って矢印を作成
       if (element1Ref.current && element2Ref.current) {
         const line = new LeaderLine(
           element1Ref.current,

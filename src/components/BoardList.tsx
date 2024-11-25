@@ -1,12 +1,11 @@
 import LinkToBoard from "./LinkToBoard";
 import { BoardObject } from "../Home";
 import { useState, useEffect, SetStateAction } from "react";
+import { v4 as uuidv4} from "uuid";
 
 type Props = {
     displayBoards: BoardObject[],
     defaultBoards: BoardObject[],
-    savedBoards: BoardObject[],
-    setSavedBoards: React.Dispatch<SetStateAction<BoardObject[]>> 
     name: 'own' | 'share' | 'save' 
 }
 
@@ -16,7 +15,7 @@ const BoardList:React.FC<Props> = (props) => {
     const [displayBoards, setDisplayBoards] = useState<BoardObject[]>([]);
 
     //ボードデータを評価順に格納するstate
-    const [goodedBoards, setGoodedBoards] = useState<BoardObject[]>([]);
+    const [filterByGoodedBoards, setFilterByGoodedBoards] = useState<BoardObject[]>([]);
 
     const [searchKey, setSearchKey] = useState("");
    
@@ -24,30 +23,32 @@ const BoardList:React.FC<Props> = (props) => {
 
     useEffect(() => {
         const copyBoards = [...props.displayBoards]
-        setGoodedBoards(copyBoards.sort((a:any,b:any) => b.good.length - a.good.length));
+        setFilterByGoodedBoards(copyBoards.sort((a:any,b:any) => b.goods.length - a.goods.length));
         setDisplayBoards(props.displayBoards);
         
     },[props.displayBoards])
 
-    //絞り込みの状態を記録するstate
+    //絞り込みの状態を記憶するstate
     const [filter, setFilter] = useState("");
 
+    //ソートの状態を記憶するstate
     const [sort, setSort] = useState("new");
 
     //絞り込みを実行する関数
     const ChangeBoard = (filter:string, sort:string) => {
         let newBoard = [...props.displayBoards]
-        if (sort === "good") newBoard = [...goodedBoards];
+        if (sort === "good") newBoard = [...filterByGoodedBoards];
         if (filter !== "") setDisplayBoards(newBoard.filter((board:BoardObject) => board.boardType === filter))
         else setDisplayBoards(newBoard);
         setFilter(filter);
         setSort(sort);
     }
 
+    //ID検索を実行する関数
     const searchBoard = (e:any) => {
         e.preventDefault();
         const boards = [...props.defaultBoards]
-        setDisplayBoards(boards.filter((board) => board.key === searchKey))
+        setDisplayBoards(boards.filter((board) => board.boardId === searchKey))
     }
 
     return (
@@ -118,16 +119,14 @@ const BoardList:React.FC<Props> = (props) => {
                     </form>
                 </div>
             </div>
-            <div className='w-full p-3 border-blue-950 bg-blue-950 h-[100vh] overflow-scroll rounded-b-2xl'>
+            <div className='w-full p-3 border-blue-950 bg-blue-950 h-[100vh] overflow-scroll rounded-b-2xl'
+            >
                 <div className='flex flex-row justify-start flex-wrap gap-y-3'>
                     {displayBoards.map((board:BoardObject,index:number) => {
                         return(
                             <LinkToBoard board={board} index={index}
-                                         type={props.name} key={board.key}
-                                         defaultBoards={props.defaultBoards}
-                                         savedBoards={props.savedBoards}
-                                         setSavedBoards={props.setSavedBoards}
-
+                                         type={props.name} 
+                                         key={index}
                             />
                         )
                     })}

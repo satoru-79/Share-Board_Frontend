@@ -12,7 +12,7 @@ type Props = {
     property: 'color' | 'endPlug' | 'path'
 }
 
-
+//ドロワーの矢印の設定部分コンポーネント
 const ArrowSetting:React.FC<Props> = (props) => {
 
     let [activeImg,setActiveImg] = useState<number>(20);  

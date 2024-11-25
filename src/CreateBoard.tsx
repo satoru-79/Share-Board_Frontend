@@ -1,11 +1,10 @@
 import { SetStateAction, useState, useEffect } from "react" 
-import { db , auth} from './firebase';
-import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import Modal from 'react-modal';
 import ClearIcon from '@mui/icons-material/Clear';
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {v4 as uuidv4} from 'uuid';
-import { BoardData } from "./Home";
+import { BoardData, BoardType} from "./Home";
+import axios from "axios";
 
 type Props = {
     boardKey: string,
@@ -15,19 +14,30 @@ type Props = {
     currentBoard: BoardData,
     title: string,
     type: 'create' | 'edit'
+    goods: String[],
+
 }
 
 
+//ボード作成、編集時のモーダルコンポーネント
 const CreateBoard:React.FC<Props> = (props) => {
 
-    //モーダル回芸を管理するステート
-    const [editModalIsOpen, setEditModalIsOpen] = useState(false);
-    const [title,setTitle] = useState<string>('');
-    const [boardType, setBoardType] = useState('オフェンス');
-    const [ispublic, setIsPublic] = useState(true);
 
+
+    const [editModalIsOpen, setEditModalIsOpen] = useState(false);
+
+    const [title,setTitle] = useState<string>('');
+    const [boardType, setBoardType] = useState<BoardType>('オフェンス');
+    const [ispublic, setIsPublic] = useState(1);
+
+    const [errorMsg, setErrorMsg] = useState<String>("")
+
+    const token = localStorage.getItem("TOKEN")
+
+    const navigate = useNavigate()
+
+    //「作成」,「編集」ボタンを押した際にそのとき操作していたページの情報を保存する
     function updateLastBoard() {
-        console.log(props.page)
         const copyBoards = [...props.boardData];
         copyBoards[props.page] = props.currentBoard;
         props.setBoards(copyBoards);
@@ -35,49 +45,51 @@ const CreateBoard:React.FC<Props> = (props) => {
 
     
     function completeBoard() {
-        if (auth.currentUser) {
-            const key = uuidv4()
-            if (props.type === 'create') {
-                setDoc(doc(db,'boards',key), {
-                    key:key,
-                    boards: props.boardData,
-                    boardType: boardType,
-                    title: title,
-                    ispublic: ispublic,
-                    userId: auth.currentUser.uid,
-                    userName: auth.currentUser.displayName,
-                    good: [],
-                    timestamp: serverTimestamp()
-                })
-            } else {
-                if (title === '') {
-                    console.log('');
-                    console.log(props.boardData);
-                    updateDoc(doc(db,'boards', props.boardKey), {
-                        boards: props.boardData,
-                        boardType: boardType,
-                        ispublic: ispublic,
-                    })
-                } else {
-                    console.log('a');
-                    console.log(props.boardData);
-                    updateDoc(doc(db,'boards', props.boardKey), {
-                        boards: props.boardData,
-                        boardType: boardType,
-                        title: title,
-                        ispublic: ispublic,
-                    })
-                }
-            }
+
+        //タイトルのバリデーション
+        if (title.length == 0 ) {
+            setErrorMsg("タイトルは必ず入力してください");
+            return
+        } else if (title.length > 20) {
+            setErrorMsg("タイトルは20文字以内で入力してください");
+            return
         }
+
+        const completedBoard = {
+            boards: JSON.stringify(props.boardData),
+            boardId: props.type == "create" ? uuidv4() : props.boardKey,
+            userName: localStorage.getItem("USERNAME"),
+            title: title,
+            boardType: boardType,
+            ispublic: ispublic,
+            goods:  JSON.stringify(props.goods) 
+        }
+
+        axios.post(`${process.env.REACT_APP_BASE_URL}/api/board/create`,completedBoard,{
+            headers : {
+                Authorization: `Bearer ${token}`, 
+            },
+        })
+        .then(response => {
+            navigate('/')
+        })
+        .catch(error => {
+            console.error(error)
+        });
     }
+
+    useEffect(() => {
+        setTitle(props.title);
+    },[])
+
+
 
 
     return (
 
         <div className="items-center ">
             <p className="border px-4 py-2 btn text-center text-white bg-blue-950
-                          hover:bg-white hover:text-blue-950 hover:border-blue-950"
+                          hover:bg-white hover:text-blue-950 hover:border-blue-950 rounded-xl"
                onClick={() => {
                 setEditModalIsOpen(true);
                 updateLastBoard();
@@ -142,6 +154,9 @@ const CreateBoard:React.FC<Props> = (props) => {
                                    defaultValue={props.title}
                             />
                         </div>
+                        <div className="w-full flex justify-center">
+                            <p className="text-red-500 w-2/3">{errorMsg}</p>
+                        </div>
                         <div  className="flex flex-col items-center w-full">
                             <p className="font-black mb-3">戦術の種類</p>
                             <div className="flex flex-row border w-2/3 py-1 justify-around"> 
@@ -171,25 +186,31 @@ const CreateBoard:React.FC<Props> = (props) => {
                             <div className="flex flex-row border w-2/3 py-1 justify-around"> 
                                 <div>
                                     <input type="radio"  id="public" name="ispublic" value="public" 
-                                           defaultChecked onChange={() => setIsPublic(true)}
+                                           defaultChecked onChange={() => setIsPublic(1)}
                                     />
                                     <label htmlFor="public">する</label>
                                 </div>
                                 <div>
                                     <input type="radio" id="private" name="ispublic" value="private" 
-                                           onChange={() => setIsPublic(false)}
+                                           onChange={() => setIsPublic(0)}
                                     />
                                     <label htmlFor="private">しない</label>
                                 </div>
                             </div>
                         </div>
                         <div className="flex justify-center ">
-                            <Link to={'/'}  onClick={() => completeBoard()}>
+                            <div   
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    completeBoard()
+                                   
+                                }}
+                            >
                                 <input type="submit" value='保存' 
                                        className="font-black border border-black px-2 py-1 btn 
                                                   hover:bg-black hover:text-white"
                                 />
-                            </Link>
+                            </div>
                         </div>
                     </form>
                 </div>

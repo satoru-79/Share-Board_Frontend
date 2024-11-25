@@ -1,8 +1,8 @@
 import Header from "./components/Header"
-import {auth} from "./firebase"
-import { useAuthState } from "react-firebase-hooks/auth";
+import { Link } from "react-router-dom";
 
 
+//「ボードの使い方」ボタン押下時に表示する画面
 const Information = () => {
 
     const width = window.innerWidth;
@@ -23,7 +23,7 @@ const Information = () => {
                         <p className="text-lg"><span className="font-bold">コートの種類 :</span><br/> 
                             画面左上のTabからコートを選ぶと、オールコート / ハーフコートが入れ替わります。
                         </p>
-                        <p className="text-lg"><span className="font-bold">ページの切り替え(サインイン時のみ) :</span><br/>
+                        <p className="text-lg"><span className="font-bold">ページの切り替え(ログイン時のみ) :</span><br/>
                             画面下部の「前のボード」、「次のボード」で編集するページを切り替えることができます。また、画面上部の
                             「このページを削除」ボタンを押すと、表示されているページを削除することができます。<br/>
                             また、先頭のページにいるときに「次のボード」を押すと、作成・編集時のみページを追加できます。
@@ -48,7 +48,7 @@ const Information = () => {
                             ドロワーメニュー内から、名前、番号、色を設定して追加ボタンを押すとコートにプレイヤーが追加されます。また、
                             すでに追加されているプレイヤーをクリックすると、ドロワーメニューからそのプレイヤーの情報の変更、削除が行えます。
                         </p>
-                        <p className="text-lg"><span className="font-bold">プリセットの管理(サインイン時のみ) :</span><br/>
+                        <p className="text-lg"><span className="font-bold">プリセットの管理(ログイン時のみ) :</span><br/>
                             ドロワーメニュー内から、プリセットの登録、呼び出し、削除が行えます。登録はhome / away で別々ですが、呼び出しはどちらからでも行えます
                         </p>
                         <p className="text-lg"><span className="font-bold">矢印 :</span><br/>

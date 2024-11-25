@@ -2,11 +2,10 @@ import '../App.css'
 import Modal from 'react-modal';
 import { FormEvent, useState, useEffect, SetStateAction } from 'react';
 import ClearIcon from '@mui/icons-material/Clear'
-import {auth, db} from '../firebase'
-import { setDoc,collection, getDocs, deleteDoc, doc} from 'firebase/firestore';
 import { Player } from '../Board';
 import { BoardData } from '../Home';
 import {v4 as uuidv4} from 'uuid';
+import axios from 'axios';
 
 
 type Props = {
@@ -17,6 +16,7 @@ type Props = {
     side: 'home' | 'away'
 }
 
+//プリセットの状態を制御するコンポーネント
 const Preset:React.FC<Props> = (props) => {
 
     const [editModalIsOpen, setEditModalIsOpen] = useState(false);
@@ -26,11 +26,29 @@ const Preset:React.FC<Props> = (props) => {
 
     const [presetName, setPresetName] = useState('チーム1');
 
+    const username = localStorage.getItem("USERNAME") || ""
+    const token = localStorage.getItem("TOKEN")
+
     const getMyPreset = () => {
-        getDocs(collection(db,'preset')).then((snapShot) => {
-            const myData = snapShot.docs.filter((doc) => doc.data().userId === auth.currentUser?.uid )
-            setMyPreset(myData.map((doc) => ({...doc.data()})))
+
+       
+        axios.get(`${process.env.REACT_APP_BASE_URL}/api/preset?username=${username}`,{
+            headers : {
+                Authorization: `Bearer ${token}`, 
+            },
         })
+        .then(response => {
+            response.data.map((preset:any) => {
+                preset.players = JSON.parse(preset.players)
+            })
+            setMyPreset(response.data);
+            setEditModalIsOpen(false);
+        })
+        .catch(error => {
+            console.error(error);
+        });
+    
+        
     }
 
     useEffect(() => {
@@ -39,25 +57,29 @@ const Preset:React.FC<Props> = (props) => {
     },[])
 
     const makePreset = (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+        e.preventDefault()
+
         props.players[0].key = "1";
-        if (auth.currentUser) {
-            const key = uuidv4();
-            setDoc(doc(db,'preset',key), {
-                key: key,
-                title: presetName,
-                players: props.players,
-                userId: auth.currentUser.uid
-            })
-            setMyPreset([...myPreset, {
-                key:key,
-                title:presetName,
-                players: props.players,
-                userId: auth.currentUser.uid
-            }])
+        const newPreset = {
+            presetId : uuidv4(),
+            title : presetName,
+            username : username
         }
-        setEditModalIsOpen(false);
+        const includedNewPreset = [...myPreset,{...newPreset, players : props.players}]
+        setMyPreset(includedNewPreset)
+        axios.post(`${process.env.REACT_APP_BASE_URL}/api/preset/create`, {...newPreset, players : JSON.stringify(props.players)},{
+            headers : {
+                Authorization: `Bearer ${token}`, 
+            },
+        })
+        .then(response => {
+            setEditModalIsOpen(false);
+        })
+        .catch(error => {
+            console.error(error);
+        });
     }
+
 
     const callPreset = (players:Player[]) => {
         players.map((player) => {
@@ -69,9 +91,22 @@ const Preset:React.FC<Props> = (props) => {
         setEditModal2IsOpen(false);
     }
 
-    const deletePreset = (key:string) => {
-        deleteDoc(doc(db,'preset',key));
-        setMyPreset(myPreset.filter((preset:any) => preset.key !== key))
+    const deletePreset = (presetId:string) => {
+        const newPreset = myPreset.filter((preset:any) => preset.presetId !== presetId)
+        setMyPreset(newPreset)
+
+        axios.post(`${process.env.REACT_APP_BASE_URL}/api/preset/delete?presetId=${presetId}`,{},{
+            headers : {
+                Authorization: `Bearer ${token}`, 
+            },
+        })
+        .then(response => {
+            setEditModalIsOpen(false);
+        })
+        .catch(error => {
+            console.error(error);
+        })
+        
     }
     
 
@@ -225,7 +260,7 @@ const Preset:React.FC<Props> = (props) => {
                                         {data.title}
                                     </p>
                                     <div className='w-[15%] drawerButton text-center'
-                                         onClick={() => deletePreset(data.key)}
+                                         onClick={() => deletePreset(data.presetId)}
                                     >
                                         <p>削除</p>
                                     </div>

@@ -14,6 +14,7 @@ type Props = {
     currentBoard: BoardData
 }
 
+//駒の状態を制御するコンポーネント
 const Piece:React.FC<Props> = (props) => {
     const height = getCourtSize('height');
 

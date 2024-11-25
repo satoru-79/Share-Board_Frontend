@@ -11,14 +11,15 @@ import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid'
 import CreateBoard from './CreateBoard'
 import Preset from './components/Preset';
-import { useLocation } from 'react-router-dom';
-import {auth, db} from './firebase';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { BoardData, BoardObject } from './Home';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { BoardData,  } from './Home';
 import ArrowList from './components/ArrowList';
 import { useSearchParams } from 'react-router-dom';
-import {collection, getDocs,  } from 'firebase/firestore'
-import { PropertyDescriptorParsingType } from 'html2canvas/dist/types/css/IPropertyDescriptor';
+import CopyToClipboard from './components/CopyToClipboard';
+import axios from 'axios';
+
+
+
 
 
 export type Player = {
@@ -71,23 +72,30 @@ type Props = {
 
 
 
+//ボードの情報を表示する画面
 const Board:React.FC<Props> = (props) => {
 
-  const [user] = useAuthState(auth);
+  const username = localStorage.getItem("USERNAME") || ""
 
   const [searchParams] = useSearchParams();
 
+  const navigate = useNavigate()
+
+  //urlからアクセスした際の認証状態との矛盾をなくすためのルール
+  const displayable = ((props.type === "create" || props.type === "edit") && (username === searchParams.get("user"))) ||
+                      props.type === ""  ||  props.type === "share" || props.type == "save"
+
+  //ルールを守っていない場合、ログイン画面にとばす
+  if (!displayable) navigate('../../login')
+
+  
   //Linkから飛んできた際に渡された情報を受け取る。
   const location = useLocation();
-
-  const displayable = ((props.type === "create" || props.type === "edit") && (auth.currentUser?.uid === searchParams.get("user"))) ||
-                      (props.type === "" ) || 
-                      (( props.type === "share" || props.type == "save") && (user)) 
                       
-
 
   const [boardKey, setBoardKey] = useState("");
   const [boardTitle, setBoardTitle] = useState("");
+  const [goods, setGoods] = useState([])
   const [currentBoard, setCurrentBoard] = useState<BoardData>(
     {
       homePlayers:[],
@@ -118,7 +126,7 @@ const Board:React.FC<Props> = (props) => {
 
   /*--------------------------//
   プレイヤーの情報を管理する変数・関数
-  = フォームの内容が変化するたびにplayerステートを更新し、
+  => フォームの内容が変化するたびにplayerステートを更新し、
   送信されたタイミングでcuurentBoardのplayersステートに追加。
   //----------------------------*/
   const [homePlayer, setHomePlayer] = useState<Player>({key:'', name:"", number:"", side:'home', color: {code:"red", isblack: false,}, position: {x:0 , y:0 }})
@@ -161,7 +169,7 @@ const Board:React.FC<Props> = (props) => {
 
   /*------------------------//
   矢印を管理する変数・関数
-  = 形や線のタイプなどを選択するごとにarrowステートを更新し、追加ボタンが押された時にarrowsステートに追加。 
+  => 形や線のタイプなどを選択するごとにarrowステートを更新し、追加ボタンが押された時にarrowsステートに追加。 
   //------------------------*/
   const [arrow, setArrow] = useState<ArrowObject>({key:"",path:'straight',color:'black',startPlug:'behind',endPlug:'arrow1',dash:false,reverse:false,endLabel:"",startLabel:"",startPosition: {x: 0,y: 0}, endPosition: {x: 0,y: 0}});
   const [arrows, setArrows] = useState<ArrowObject[]>([]);
@@ -173,40 +181,53 @@ const Board:React.FC<Props> = (props) => {
     else setCurrentBoard({...currentBoard, arrows : [...currentBoard.arrows, {...copyArrow, key:uuidv4()}]});
   }
 
-
-    
-
   const updateBallPosition = (e:DraggableEvent, data: DraggableData) => { 
     setCurrentBoard({...currentBoard, ballPosition: {x: data.x/getCourtSize('width') , y:data.y/getCourtSize('height')}});
     
   }
 
-  const getBoardInfo = () => {
-    const boardRef = collection(db,'boards');
-    getDocs(boardRef).then((snapShot) => {
-        const targetData = snapShot.docs.find((doc) => doc.data().key === searchParams.get("key"))?.data();
-        console.log(targetData);
-        setBoards(targetData?.boards)
-        setCurrentBoard(targetData?.boards[0])
-        setBoardKey(targetData?.key);
-        setBoardTitle(targetData?.title);
-    })
-  }
+ 
+
 
   useEffect(() => {
     /*----------------------------------------------//
     作成済みのボードや公開中のボードを開く時に、
     すでに決まっているプレイヤーや矢印の情報をステートに代入する
     //----------------------------------------------*/
-    if (location.state) {
-      if (location.state.boards) { 
-        setBoards(location.state.boards);
-        setCurrentBoard(location.state.boards[0]);
-        setBoardKey(location.state.key);
-        setBoardTitle(location.state.title);
+    if (props.type !== "create") {
+      const loc = location.state
+      // リンクから到達した時の代入処理
+      if (loc) {
+        if (loc.board) { 
+          setBoards(loc.board.boards);
+          setCurrentBoard(loc.board.boards[0]);
+          setBoardKey(loc.board.boardId);
+          setBoardTitle(loc.board.title);
+          setGoods(loc.board.goods)
+        }
+      // urlから到達した時の代入処理
+      } else {
+        const token = localStorage.getItem("TOKEN")
+        const boardId = searchParams.get("key")
+        axios.get(`${process.env.REACT_APP_BASE_URL}/api/board/find-by-boardid?boardId=${boardId}`,{
+          headers : {
+              Authorization: `Bearer ${token}`, 
+          },
+      })
+          .then(response => {
+              const parsedData = JSON.parse(response.data.boards)
+              
+              setBoards(parsedData);
+              setCurrentBoard(parsedData[0]);
+              setBoardKey(response.data.boardId);
+              setBoardTitle(response.data.title);
+              setGoods(JSON.parse(response.data.goods))
+          })
+          .catch(error => {
+            console.error(error);
+            navigate("*")
+          });
       }
-    } else {
-      getBoardInfo()
     }
   },[])
 
@@ -233,6 +254,8 @@ const Board:React.FC<Props> = (props) => {
 
   //何枚目のボードを操作しているかを管理する変数
   const [page, setPage] = useState<number>(0);
+
+
 
 
   //次のページに遷移する関数
@@ -271,13 +294,8 @@ const Board:React.FC<Props> = (props) => {
     }
   }
 
-  console.log(user);
-  console.log(searchParams.get("user"));
 
-
-    
-  if (displayable) {
-    return(
+  return(
       <div>
         <div id='tab-area' className='w-full '>  
           <Tabs value={value} onChange={handleChange} indicatorColor="primary"
@@ -291,15 +309,9 @@ const Board:React.FC<Props> = (props) => {
             <Tab label="HALF COURT" sx={{color:'white'}} />
             
             <div className='flex items-center  justify-end w-full'>
-              <div className='h-full flex justify-center items-center 
-                             absolute left-[30%]'
-              >
-                <p className='text-white font-black'
-                   style={{fontSize: window.innerWidth < 850 ? 12: 16}}
-                >
-                  ID : {boardKey}
-                </p>
-              </div>
+              
+              <CopyToClipboard value={boardKey}/>
+              
               { (props.type === 'create' || props.type === 'edit') &&
                 <p className='bg-red-500 absolute left-[70%] flex items-center px-2 py-1 btn 
                               rounded-full hover:bg-white text-white hover:text-red-500 font-black'
@@ -362,7 +374,7 @@ const Board:React.FC<Props> = (props) => {
                       <div className='hover:cursor-pointer z-30 absolute top-[50%] left-[50%] aspect-square'
                            style={{height: getCourtSize('height') * 0.06}}
                       >
-                        <img src='images/ball.png' alt="aaa" className='h-full pointer-events-none' />
+                        <img src='../images/ball.png' alt="aaa" className='h-full pointer-events-none' />
                       </div>
                     </Draggable>
                     {currentBoard.awayPlayers.map((player,index) => {
@@ -426,7 +438,7 @@ const Board:React.FC<Props> = (props) => {
                       <div className='hover:cursor-pointer z-20 absolute top-[50%] left-[50%]'
                            style={{height: getCourtSize('height') * 0.08}}
                       >
-                        <img src="images/ball.png" alt="" className='h-full pointer-events-none' />
+                        <img src="../images/ball.png" alt="" className='h-full pointer-events-none' />
                       </div>
                     </Draggable>
                     {currentBoard.awayPlayers.map((player,index) => {
@@ -525,11 +537,10 @@ const Board:React.FC<Props> = (props) => {
                           className='drawerButton'
                   />
                 </form>
-                { auth.currentUser &&
                 <Preset players={currentBoard.homePlayers} player={homePlayer} setCurrentBoard={setCurrentBoard}
                         currentBoard={currentBoard} side='home'
                 />
-                }
+                    
               </div>
 
               {/*--Awayチームのエリア--*/}
@@ -569,11 +580,11 @@ const Board:React.FC<Props> = (props) => {
                           className='drawerButton'
                   /> 
                 </form>
-                { auth.currentUser &&
+
                 <Preset players={currentBoard.awayPlayers} player={awayPlayer} setCurrentBoard={setCurrentBoard}
                         currentBoard={currentBoard} side='away'
                 />
-                }
+                  
               </div>  
               {/*--編集用フォームのエリア--*/}
               <div >
@@ -719,51 +730,50 @@ const Board:React.FC<Props> = (props) => {
           </div>         
         </Drawer>
         { props.type !== '' &&
-        <div className='flex flex-row justify-around w-full fixed top-[90%] z-30 border-black'>
-          <p className="border border-blue-950 px-4 py-2 btn text-center text-white 
-                        bg-blue-950  hover:bg-white hover:text-blue-950 "
-             onClick={() => {
-              page !== 0 && toPrevPage(); 
-             }}
+        <div className='w-full flex justify-center'>
+          <div className='flex flex-row justify-between w-[90%] fixed top-[90%] z-30 '>
+            <p className="border border-blue-950 rounded px-2 py-2 btn text-center text-white 
+                          bg-blue-950  hover:bg-white hover:text-blue-950 rounded-xl"
+              onClick={() => {
+                page !== 0 && toPrevPage(); 
+              }}
             >
-                {'<'} 前のボード
+                {'<'} 前のページ
             </p>
-          { props.type === 'create' ?
-          <CreateBoard boardKey={boardKey}
-                       boardData={boards}
-                       currentBoard={currentBoard}
-                       setBoards={setBoards}
-                       page={page}
-                       type='create'
-                       title=''
-          /> 
-          : props.type === 'edit' &&
-          <CreateBoard boardKey={boardKey}
-                       boardData={boards}
-                       currentBoard={currentBoard}
-                       setBoards={setBoards}
-                       page={page}
-                       type='edit'
-                       title={boardTitle}
-          /> 
-          }
-          <p className="border border-blue-950 px-4 py-2 btn text-center text-white bg-blue-950
-                          hover:bg-white hover:text-blue-950 "
-             onClick={() =>  toNextPage()}
-            >
-                次のボード &gt;
-          </p>
+            { props.type === 'create' ?
+            <CreateBoard boardKey={boardKey}
+                        boardData={boards}
+                        currentBoard={currentBoard}
+                        setBoards={setBoards}
+                        page={page}
+                        type='create'
+                        title=''
+                        goods={[]}
+            /> 
+            : props.type === 'edit' &&
+            <CreateBoard boardKey={boardKey}
+                        boardData={boards}
+                        currentBoard={currentBoard}
+                        setBoards={setBoards}
+                        page={page}
+                        type='edit'
+                        title={boardTitle}
+                        goods={goods}
+            /> 
+            }
+            <p className="border border-blue-950 px-4 py-2 btn text-center text-white bg-blue-950
+                            hover:bg-white hover:text-blue-950 rounded-xl"
+              onClick={() =>  toNextPage()}
+              >
+                  次のページ &gt;
+            </p>
+          </div>
         </div>
+        
         }
-      </div>        
+      </div> 
+      
     )
-  } else {
-    return (
-      <div>
-
-      </div>  
-    )
-  }
 }
 
 export default Board;

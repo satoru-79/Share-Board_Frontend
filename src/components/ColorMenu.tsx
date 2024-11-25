@@ -10,6 +10,7 @@ type Props = {
     setPlayer: React.Dispatch<React.SetStateAction<Player>>
 }
 
+//駒の色と文字の色を変更するMenu
 const ColorMenu:React.FC<Props> = (props) => {
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
