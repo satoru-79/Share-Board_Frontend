@@ -45,6 +45,7 @@ const CreateBoard:React.FC<Props> = (props) => {
 
     
     function completeBoard() {
+        console.log(title)
 
         //タイトルのバリデーション
         if (title.length == 0 ) {
@@ -79,8 +80,10 @@ const CreateBoard:React.FC<Props> = (props) => {
     }
 
     useEffect(() => {
+        const title = props.title
+        console.log(title)
         setTitle(props.title);
-    },[])
+    })
 
 
 
@@ -93,6 +96,7 @@ const CreateBoard:React.FC<Props> = (props) => {
                onClick={() => {
                 setEditModalIsOpen(true);
                 updateLastBoard();
+                console.log(props)
                }}
             >
             { props.type === 'create' ? '作成' : '編集'
