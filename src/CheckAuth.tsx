@@ -25,9 +25,6 @@ const CheckAuth:React.FC = () => {
             localStorage.setItem("USERNAME","")
             navigate("/")
          });
-        console.log("a")
-        
-
 
     },[])
 

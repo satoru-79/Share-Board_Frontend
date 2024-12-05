@@ -32,7 +32,7 @@ const Information = () => {
                            画面右上の青いスパナのアイコンを押すと、右側にドロワーメニューが表示されます。このドロワーメニューから選手や矢印を追加できます。
                         </p>
                     </div>
-                    <img src="images/information.png" alt="" className="m-auto"
+                    <img src="../images/information.png" alt="" className="m-auto"
                         style={{width: width > 500 ? width * 0.5 : width * 0.9, 
                                 height: width > 500 ? width * 0.31 : width * 0.558
                                }}
@@ -56,7 +56,7 @@ const Information = () => {
                            矢印の移動は始点と終点の白い四角をドラッグすることで行えます(ボードの見やすさを考慮して、白い四角は作成・編集時にしか表示されません)。
                         </p>
                     </div>
-                    <img src="images/information_2.png" alt="" className="m-auto"
+                    <img src="../images/information_2.png" alt="" className="m-auto"
                          style={{width: width > 500 ? width * 0.5 : width * 0.9, 
                                  height: width > 500 ? width * 0.31 : width * 0.558
                                 }}

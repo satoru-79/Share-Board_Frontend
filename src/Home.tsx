@@ -104,9 +104,10 @@ const Home:React.FC<Props> = (props) => {
              setGoodedBoards(publicBoards.filter((data:BoardObject) => data.goods.includes(username)))
          })
          .catch(error => {
-             if (error.response.status === 401) {
-                signOut()
-             }
+            //  if (error.response.status === 401) {
+            //     signOut()
+            //  }
+            console.error(error);
          });
         
     }
