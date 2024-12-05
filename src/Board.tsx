@@ -661,10 +661,10 @@ const Board:React.FC<Props> = (props) => {
                 </div>
                 <ArrowSetting 
                   urls={
-                    ['images/straight_arrow_black.png',
-                      'images/straight_arrow_red.png',
-                      'images/dash_arrow_black.png',
-                      'images/dash_arrow_red.png',
+                    ['../images/straight_arrow_black.png',
+                     '../images/straight_arrow_red.png',
+                     '../images/dash_arrow_black.png',
+                     '../images/dash_arrow_red.png',
                     ]
                   }
                   options={['black','red','black','red']}
@@ -679,11 +679,11 @@ const Board:React.FC<Props> = (props) => {
                 </div>
                 <ArrowSetting 
                   urls={
-                    [ 'images/straight_arrow_black.png',
-                      'images/arrow2_arrow.png',
-                      'images/square_arrow.png',
-                      'images/disc_arrow.png',
-                      'images/hand_arrow.png'
+                    [ '../images/straight_arrow_black.png',
+                      '../images/arrow2_arrow.png',
+                      '../images/square_arrow.png',
+                      '../images/disc_arrow.png',
+                      '../images/hand_arrow.png'
                     ]
                   }
                   options = {['arrow1','arrow2','square','disc','hand']}
@@ -698,9 +698,9 @@ const Board:React.FC<Props> = (props) => {
                 </div>
                 <ArrowSetting 
                   urls={
-                    ['images/straight_arrow_black.png',
-                      'images/arc_arrow.png',
-                      'images/arc_arrow_reverse.png',
+                    [ '../images/straight_arrow_black.png',
+                      '../images/arc_arrow.png',
+                      '../images/arc_arrow_reverse.png',
                     ]
                   }
                   options={['straight','arc','arc']} 

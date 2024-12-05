@@ -179,9 +179,6 @@ const Auth:React.FC<Props> = (props) => {
                      id='navigate-area'
                 >
                     <div className='w-full flex flex-col justify-start'>
-                        <div className='my-3 flex flex-row '>
-                            <p className='border-b border-black btn hover:opacity-55'>パスワードをお忘れの方はこちら</p>
-                        </div>
                         <div className='flex flex-row my-3'>
                             <Link to={'/signup'} className='border-b border-red-500 text-red-500 btn hover:opacity-55'>
                                 アカウントをお持ちでない方はこちら
