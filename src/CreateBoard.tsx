@@ -91,7 +91,6 @@ const CreateBoard:React.FC<Props> = (props) => {
                onClick={() => {
                 setEditModalIsOpen(true);
                 updateLastBoard();
-                console.log(JSON.stringify(props.boardData))
                }}
             >
             { props.type === 'create' ? '作成' : '編集'
