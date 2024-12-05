@@ -1,6 +1,6 @@
 # Share-Board 
 ## URL
-未デプロイ
+https://share-board-frontend.vercel.app
 ### 概要
 　バスケットボールの作戦版をデジタル化し、作成したボードを共有・保存ができるサイトのフロントエンド部分です。バックエンドにはspring-bootを使用しています
 ### 使用技術
@@ -8,6 +8,7 @@
  * TypeScript 4.9.5 <br>
  * Tailwind CSS 3.4.3 <br>
  * node.js 20.11.0<br>
+ * vercel
 
 
 ### 機能
