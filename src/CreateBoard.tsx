@@ -1,4 +1,4 @@
-import { SetStateAction, useState, useEffect } from "react" 
+import { SetStateAction, useState,  } from "react" 
 import Modal from 'react-modal';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useNavigate } from "react-router-dom";
@@ -47,7 +47,7 @@ const CreateBoard:React.FC<Props> = (props) => {
     function completeBoard() {
 
         //タイトルのバリデーション
-        if (title.length == 0 ) {
+        if (title.length === 0 ) {
             setErrorMsg("タイトルは必ず入力してください");
             return
         } else if (title.length > 20) {
@@ -57,7 +57,7 @@ const CreateBoard:React.FC<Props> = (props) => {
 
         const completedBoard = {
             boards: JSON.stringify(props.boardData),
-            boardId: props.type == "create" ? uuidv4() : props.boardKey,
+            boardId: props.type === "create" ? uuidv4() : props.boardKey,
             userName: localStorage.getItem("USERNAME"),
             title: title,
             boardType: boardType,
@@ -78,7 +78,8 @@ const CreateBoard:React.FC<Props> = (props) => {
         });
     }
 
-   
+
+    
 
 
 
@@ -149,7 +150,7 @@ const CreateBoard:React.FC<Props> = (props) => {
                             <input type="text" onChange={(e) => setTitle(e.target.value)}
                                    className="bg-slate-200 rounded-[5px] w-2/3 py-1 px-1"
                                    placeholder="ボードのタイトルを入力"
-                                   defaultValue={props.title}
+                                   defaultValue={title}
                             />
                         </div>
                         <div className="w-full flex justify-center">

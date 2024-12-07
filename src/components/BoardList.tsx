@@ -25,6 +25,7 @@ const BoardList:React.FC<Props> = (props) => {
         const copyBoards = [...props.displayBoards]
         setFilterByGoodedBoards(copyBoards.sort((a:any,b:any) => b.goods.length - a.goods.length));
         setDisplayBoards(props.displayBoards);
+        console.log(props.displayBoards)
         
     },[props.displayBoards])
 

@@ -1,5 +1,5 @@
-import { useState, useEffect,createContext, useContext, SetStateAction } from 'react'
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useState, useEffect,createContext, SetStateAction } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Player, ArrowObject } from './Board';
 import BoardList from './components/BoardList';
 import axios from 'axios';
@@ -98,16 +98,15 @@ const Home:React.FC<Props> = (props) => {
                      goods: JSON.parse(board.goods)
                  })
              })
+             console.log(parsedData)
              const publicBoards = parsedData.filter((board:BoardObject) => board.ispublic == 1)
              setDefaultBoards(publicBoards)
-             setMyBoards(parsedData.filter((data:BoardObject) => data.userName == username))
+             setMyBoards(parsedData.filter((data:BoardObject) => data.userName === username))
              setGoodedBoards(publicBoards.filter((data:BoardObject) => data.goods.includes(username)))
          })
          .catch(error => {
-            //  if (error.response.status === 401) {
-            //     signOut()
-            //  }
             console.error(error);
+            signOut()
          });
         
     }
@@ -116,7 +115,7 @@ const Home:React.FC<Props> = (props) => {
 
     //クエリパラメータ更新毎に実行する
     useEffect(() => {
-        const end_point = param == "" ? "get" : "filter-by-username"
+        const end_point = param === "" ? "get" : "filter-by-username"
         setEndPoint(end_point)
         getBoardData(end_point)
     },[param])
@@ -137,7 +136,7 @@ const Home:React.FC<Props> = (props) => {
             </div> 
             <div className='px-3 bg-white'>
             <div className='flex flex-row h-16 w-full justify-between py-6 items-center'>
-                { param == "" ? 
+                { param === "" ? 
                 <>
                     <div className='flex flex-row gap-2 '>
                         <p className='flex items-center font-black '>ユーザー :</p>
