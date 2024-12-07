@@ -150,7 +150,6 @@ const CreateBoard:React.FC<Props> = (props) => {
                             <input type="text" onChange={(e) => setTitle(e.target.value)}
                                    className="bg-slate-200 rounded-[5px] w-2/3 py-1 px-1"
                                    placeholder="ボードのタイトルを入力"
-                                   defaultValue={title}
                             />
                         </div>
                         <div className="w-full flex justify-center">
